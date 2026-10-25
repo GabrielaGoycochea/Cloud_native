@@ -2,7 +2,7 @@ name: Build and Push Docker Image
 
 on:
   push:
-    branches:  
+    branches:
       - main
 
 jobs:
@@ -47,20 +47,39 @@ jobs:
           echo "${{ secrets.EC2_SSH_KEY }}" > ~/.ssh/id_rsa
           chmod 600 ~/.ssh/id_rsa
 
-      # Paso 6: Conectarse a EC2 y desplegar el contenedor
+      # Paso 6: Conectarse a EC2, levantar Postgres y desplegar el microservicio
       - name: SSH commands to deploy
         run: |
           ssh -i ~/.ssh/id_rsa -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null ${{ secrets.USER_SERVER }}@${{ secrets.EC2_HOST }} << 'EOF'
             # Autenticar en DockerHub desde EC2
             echo ${{ secrets.DOCKERHUB_TOKEN }} | docker login -u ${{ secrets.DOCKERHUB_USERNAME }} --password-stdin
+
+            # Crear la red si no existe
+            docker network create eventos-net || true
+
+            # Levantar Postgres si no existe (conserva los datos en un volumen)
+            docker start postgres-db || docker run -d --name postgres-db --network eventos-net \
+              -v pgdata:/var/lib/postgresql/data \
+              -e POSTGRES_DB=eventos_db \
+              -e POSTGRES_USER=postgres \
+              -e POSTGRES_PASSWORD=secretpostgres \
+              postgres:15
+
+            # Esperar a que Postgres acepte conexiones
+            sleep 15
+
             # Descargar la última versión de la imagen
             docker pull ${{ secrets.DOCKERHUB_USERNAME }}/eventos-service:latest
-            # Parar y eliminar cualquier contenedor previo
+
+            # Parar y eliminar el microservicio anterior
             docker stop eventos-service || true && docker rm eventos-service || true
-            # Iniciar el contenedor con las credenciales de Postgres
-            docker run -d --name eventos-service -p 8080:8080 \
-              -e DB_URL='${{ secrets.DB_URL }}' \
-              -e DB_USER='${{ secrets.DB_USER }}' \
-              -e DB_PASSWORD='${{ secrets.DB_PASSWORD }}' \
+
+            # Iniciar el microservicio conectado a la red
+            docker run -d --name eventos-service --network eventos-net -p 8080:8080 \
               ${{ secrets.DOCKERHUB_USERNAME }}/eventos-service:latest
+
+            # Verificar que quedó corriendo
+            sleep 20
+            docker ps
+            docker logs eventos-service --tail 20
           EOF

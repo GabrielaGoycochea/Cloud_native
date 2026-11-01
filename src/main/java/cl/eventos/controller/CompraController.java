@@ -44,6 +44,8 @@ public List<Compra> listarCompras() {
         compra.setPrecioTotal(total);
         compraRepository.save(compra);
 
-        return new CompraResponse(evento.getNombre(), request.cantidad(), evento.getPrecio(), total);
+        Compra guardada = compraRepository.save(compra);
+
+        return new CompraResponse(guardada.getId(), evento.getNombre(), request.cantidad(), evento.getPrecio(), total); 
     }
 }

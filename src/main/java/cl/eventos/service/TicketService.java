@@ -17,10 +17,13 @@ import software.amazon.awssdk.services.s3.model.*;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.ByteArrayOutputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipOutputStream;
 
 @Service
 public class TicketService {
@@ -126,8 +129,13 @@ public class TicketService {
                 .orElseThrow(() -> new RuntimeException("Ticket no encontrado"));
         if (detalles.getEstado() != null) ticket.setEstado(detalles.getEstado());
         if (detalles.getPrecio() != null) ticket.setPrecio(detalles.getPrecio());
-        return ticketRepository.save(ticket);
-    }
+        
+        Ticket guardado = ticketRepository.save(ticket);
+        File archivo = new File(guardado.getRutaEfs());
+        generarPdfLocal(archivo, guardado);
+        subirArchivoS3(archivo, guardado.getS3Key());
+        return guardado;
+        }
 
     public void eliminarTicket(Long id) {
         Ticket ticket = ticketRepository.findById(id)
@@ -162,4 +170,23 @@ public class TicketService {
     public EstadisticasEventoDTO obtenerEstadisticas(String eventoId) {
         return ticketRepository.obtenerEstadisticasPorEvento(eventoId);
     }
+
+    public byte[] descargarZip(List<Ticket> tickets) throws IOException {
+    if (tickets.isEmpty()) {
+        throw new RuntimeException("No hay tickets para descargar");
+    }
+    ByteArrayOutputStream salida = new ByteArrayOutputStream();
+    try (ZipOutputStream zip = new ZipOutputStream(salida)) {
+        for (Ticket t : tickets) {
+            byte[] pdf = s3Client.getObjectAsBytes(GetObjectRequest.builder()
+                    .bucket(bucketName).key(t.getS3Key()).build()).asByteArray();
+            zip.putNextEntry(new ZipEntry(t.getS3Key()));
+            zip.write(pdf);
+            zip.closeEntry();
+        }
+    }
+    return salida.toByteArray();
+}
+
+
 }

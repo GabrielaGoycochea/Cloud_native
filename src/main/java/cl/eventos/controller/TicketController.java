@@ -75,4 +75,24 @@ public class TicketController {
     public ResponseEntity<EstadisticasEventoDTO> reportarEstadisticas(@PathVariable String eventoId) {
         return ResponseEntity.ok(ticketService.obtenerEstadisticas(eventoId));
     }
+
+    @GetMapping("/evento/{eventoId}/descargar")
+    public ResponseEntity<byte[]> descargarPorEvento(@PathVariable String eventoId) throws IOException {
+    byte[] zip = ticketService.descargarZip(ticketService.buscarPorEvento(eventoId));
+    return ResponseEntity.ok()
+            .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=tickets_evento_" + eventoId + ".zip")
+            .contentType(MediaType.parseMediaType("application/zip"))
+            .body(zip);
+}
+
+    @GetMapping("/usuario/{usuarioId}/descargar")
+    public ResponseEntity<byte[]> descargarPorUsuario(@PathVariable String usuarioId) throws IOException {
+    byte[] zip = ticketService.descargarZip(ticketService.buscarPorUsuario(usuarioId));
+    return ResponseEntity.ok()
+            .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=tickets_usuario_" + usuarioId + ".zip")
+            .contentType(MediaType.parseMediaType("application/zip"))
+            .body(zip);
+}
+
+
 }

@@ -11,6 +11,6 @@ WORKDIR /app
 RUN mkdir -p /app/efs
 
 COPY --from=build /app/target/eventos-service-1.0.0.jar app.jar
-EXPOSE 8081
+EXPOSE 8080
 
 ENTRYPOINT ["java", "-jar", "app.jar"]

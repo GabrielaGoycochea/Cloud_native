@@ -1,0 +1,340 @@
+{
+  "info": {
+    "name": "Tickets Service",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://localhost:8080"
+    },
+    {
+      "key": "eventoId",
+      "value": "evento1"
+    },
+    {
+      "key": "usuarioId",
+      "value": "usuario1"
+    },
+    {
+      "key": "ticketId",
+      "value": "1"
+    }
+  ],
+  "item": [
+    {
+      "name": "1. Generar ticket (PDF en EFS y subida automatica a S3)",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": {
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "api",
+            "tickets",
+            "generar"
+          ],
+          "raw": "{{base_url}}/api/tickets/generar"
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"codigoTicket\": \"ticket{{$timestamp}}\",\n  \"eventoId\": \"{{eventoId}}\",\n  \"usuarioId\": \"{{usuarioId}}\",\n  \"precio\": 25000\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "try {",
+              "  var json = pm.response.json();",
+              "  if (json.id) { pm.collectionVariables.set('ticketId', json.id); }",
+              "} catch (e) {}"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "2. Generar segundo ticket (otro usuario, mismo evento)",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": {
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "api",
+            "tickets",
+            "generar"
+          ],
+          "raw": "{{base_url}}/api/tickets/generar"
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"codigoTicket\": \"ticket{{$timestamp}}\",\n  \"eventoId\": \"{{eventoId}}\",\n  \"usuarioId\": \"usuario2\",\n  \"precio\": 25000\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      }
+    },
+    {
+      "name": "3. Subir ticket a S3 (manual)",
+      "request": {
+        "method": "POST",
+        "header": [],
+        "url": {
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "api",
+            "tickets",
+            "{{ticketId}}",
+            "subir-s3"
+          ],
+          "raw": "{{base_url}}/api/tickets/{{ticketId}}/subir-s3"
+        }
+      }
+    },
+    {
+      "name": "4. Consultar tickets por evento",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "api",
+            "tickets"
+          ],
+          "query": [
+            {
+              "key": "eventoId",
+              "value": "{{eventoId}}"
+            }
+          ],
+          "raw": "{{base_url}}/api/tickets?eventoId={{eventoId}}"
+        }
+      }
+    },
+    {
+      "name": "5. Consultar tickets por usuario",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "api",
+            "tickets"
+          ],
+          "query": [
+            {
+              "key": "usuarioId",
+              "value": "{{usuarioId}}"
+            }
+          ],
+          "raw": "{{base_url}}/api/tickets?usuarioId={{usuarioId}}"
+        }
+      }
+    },
+    {
+      "name": "6. Descargar ticket por id (PDF)",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "api",
+            "tickets",
+            "{{ticketId}}",
+            "descargar"
+          ],
+          "raw": "{{base_url}}/api/tickets/{{ticketId}}/descargar"
+        }
+      }
+    },
+    {
+      "name": "7. Descargar tickets por evento (ZIP)",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "api",
+            "tickets",
+            "evento",
+            "{{eventoId}}",
+            "descargar"
+          ],
+          "raw": "{{base_url}}/api/tickets/evento/{{eventoId}}/descargar"
+        }
+      }
+    },
+    {
+      "name": "8. Descargar tickets por usuario (ZIP)",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "api",
+            "tickets",
+            "usuario",
+            "{{usuarioId}}",
+            "descargar"
+          ],
+          "raw": "{{base_url}}/api/tickets/usuario/{{usuarioId}}/descargar"
+        }
+      }
+    },
+    {
+      "name": "9. Modificar ticket (estado y precio)",
+      "request": {
+        "method": "PUT",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": {
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "api",
+            "tickets",
+            "{{ticketId}}"
+          ],
+          "raw": "{{base_url}}/api/tickets/{{ticketId}}"
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"estado\": \"PAGADO\",\n  \"precio\": 30000\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      }
+    },
+    {
+      "name": "10. Descargar ticket modificado (PDF)",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "api",
+            "tickets",
+            "{{ticketId}}",
+            "descargar"
+          ],
+          "raw": "{{base_url}}/api/tickets/{{ticketId}}/descargar"
+        }
+      }
+    },
+    {
+      "name": "11. Estadisticas de ventas y reservas por evento",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "api",
+            "tickets",
+            "reportes",
+            "eventos",
+            "{{eventoId}}"
+          ],
+          "raw": "{{base_url}}/api/tickets/reportes/eventos/{{eventoId}}"
+        }
+      }
+    },
+    {
+      "name": "12. Eliminar ticket",
+      "request": {
+        "method": "DELETE",
+        "header": [],
+        "url": {
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "api",
+            "tickets",
+            "{{ticketId}}"
+          ],
+          "raw": "{{base_url}}/api/tickets/{{ticketId}}"
+        }
+      }
+    },
+    {
+      "name": "13. Consultar tickets por evento (tras eliminar)",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "api",
+            "tickets"
+          ],
+          "query": [
+            {
+              "key": "eventoId",
+              "value": "{{eventoId}}"
+            }
+          ],
+          "raw": "{{base_url}}/api/tickets?eventoId={{eventoId}}"
+        }
+      }
+    }
+  ]
+}

@@ -1,0 +1,385 @@
+{
+  "info": {
+    "_postman_id": "744af30e-8cea-4db8-9e5e-c8b845a79361",
+    "name": "Pruebas CloudNative Semana5 (API Gateway + OAuth 2.0 + Spring Security)",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "_exporter_id": "56578147",
+    "_collection_link": "https://go.postman.co/collection/56578147-744af30e-8cea-4db8-9e5e-c8b845a79361?source=collection_link"
+  },
+  "item": [
+    {
+      "name": "1. Llamada SIN token (debe responder 401)",
+      "request": {
+        "auth": {
+          "type": "noauth"
+        },
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{base_url}}/api/resumenes/{{numeroResumen}}/archivo",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "api",
+            "resumenes",
+            "{{numeroResumen}}",
+            "archivo"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "2. Crear Evento",
+      "request": {
+        "method": "POST",
+        "header": [],
+        "url": {
+          "raw": "{{base_url}}/api/eventos",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "api",
+            "eventos"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "2.1 Listar eventos",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "try {\n  var eventos = pm.response.json();\n  if (eventos.length > 0) { pm.collectionVariables.set('eventoId', eventos[0].id); }\n} catch (e) {}"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{base_url}}/api/eventos",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "api",
+            "eventos"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "3. Comprar entradas",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "try {",
+              "  var json = pm.response.json();",
+              "  if (json.numeroResumen) { pm.collectionVariables.set('numeroResumen', json.numeroResumen); }",
+              "} catch (e) {}"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"eventoId\": {{eventoId}},\n  \"cantidad\": 3\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{base_url}}/api/compras",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "api",
+            "compras"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "3.1 Listar Compras",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{base_url}}/api/compras",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "api",
+            "compras"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "4. Generar archivo del resumen (descarga fisica)",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{base_url}}/api/resumenes/{{numeroResumen}}/archivo",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "api",
+            "resumenes",
+            "{{numeroResumen}}",
+            "archivo"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "5. Subir resumen a S3",
+      "request": {
+        "method": "POST",
+        "header": [],
+        "url": {
+          "raw": "{{base_url}}/api/resumenes/{{numeroResumen}}/s3",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "api",
+            "resumenes",
+            "{{numeroResumen}}",
+            "s3"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "6. Descargar resumen desde S3",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{base_url}}/api/resumenes/{{numeroResumen}}",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "api",
+            "resumenes",
+            "{{numeroResumen}}"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "7. Modificar resumen en S3",
+      "request": {
+        "method": "PUT",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "text/plain"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "RESUMEN DE COMPRA Nro. {{numeroResumen}} (CORREGIDO)\nEvento: Concierto Rock\nEntradas: 3\nPrecio unitario: 25000.00\nPrecio total: 75000.00\n",
+          "options": {
+            "raw": {
+              "language": "text"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{base_url}}/api/resumenes/{{numeroResumen}}",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "api",
+            "resumenes",
+            "{{numeroResumen}}"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "8. Descargar resumen modificado desde S3",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{base_url}}/api/resumenes/{{numeroResumen}}",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "api",
+            "resumenes",
+            "{{numeroResumen}}"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "9. Borrar resumen en S3",
+      "request": {
+        "method": "DELETE",
+        "header": [],
+        "url": {
+          "raw": "{{base_url}}/api/resumenes/{{numeroResumen}}",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "api",
+            "resumenes",
+            "{{numeroResumen}}"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "10. EC2 directo SIN token (Spring Security: debe responder 401)",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{ec2_url}}/api/eventos",
+          "host": [
+            "{{ec2_url}}"
+          ],
+          "path": [
+            "api",
+            "eventos"
+          ]
+        },
+        "auth": {
+          "type": "noauth"
+        }
+      }
+    },
+    {
+      "name": "11. EC2 directo CON token (debe responder 200)",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{ec2_url}}/api/eventos",
+          "host": [
+            "{{ec2_url}}"
+          ],
+          "path": [
+            "api",
+            "eventos"
+          ]
+        }
+      }
+    }
+  ],
+  "auth": {
+    "type": "oauth2",
+    "oauth2": [
+      {
+        "key": "clientId",
+        "value": "596adb15-174d-4f06-8db9-804304f9a78d",
+        "type": "string"
+      },
+      {
+        "key": "headerPrefix",
+        "value": "Bearer",
+        "type": "string"
+      },
+      {
+        "key": "accessTokenUrl",
+        "value": "https://login.microsoftonline.com/ccc7400a-7964-47d7-b1ba-3a91631855ac/oauth2/v2.0/token",
+        "type": "string"
+      },
+      {
+        "key": "tokenName",
+        "value": "token_azure",
+        "type": "string"
+      },
+      {
+        "key": "tokenType",
+        "value": "Bearer",
+        "type": "string"
+      },
+      {
+        "key": "addTokenTo",
+        "value": "header",
+        "type": "string"
+      },
+      {
+        "key": "clientSecret",
+        "value": "",
+        "type": "string"
+      },
+      {
+        "key": "scope",
+        "value": "https://Semana4CloudNativ3.onmicrosoft.com/596adb15-174d-4f06-8db9-804304f9a78d/.default",
+        "type": "string"
+      },
+      {
+        "key": "client_authentication",
+        "value": "body",
+        "type": "string"
+      },
+      {
+        "key": "grant_type",
+        "value": "client_credentials",
+        "type": "string"
+      }
+    ]
+  },
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "https://cni36xky72.execute-api.us-east-1.amazonaws.com/Dev"
+    },
+    {
+      "key": "eventoId",
+      "value": "1"
+    },
+    {
+      "key": "numeroResumen",
+      "value": "1"
+    },
+    {
+      "key": "ec2_url",
+      "value": "http://98.88.192.249:8080"
+    }
+  ]
+}
